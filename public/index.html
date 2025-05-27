@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Deevo — Gen Z AI Buddy</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0f0f0f;
+      color: white;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    .chatbox {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .message {
+      background-color: #222;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+
+    .user {
+      background-color: #1a73e8;
+      align-self: flex-end;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 10px;
+      margin-top: 2rem;
+    }
+
+    input {
+      flex: 1;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+    }
+
+    button {
+      background-color: #00ffae;
+      color: #000;
+      border: none;
+      padding: 0.75rem 1rem;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="chatbox" id="chat">
+    <div class="message">👋 Yo! I'm <strong>Deevo</strong> — your no-filter Gen Z AI buddy. Hit me up 🤘</div>
+  </div>
+
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="Type your tea 🫖 or throw a question 👀" />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const API_KEY = "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";
+    const MODEL = "openai/gpt-3.5-turbo"; // You can change this to claude, mistral etc if needed
+
+    let messages = [
+      { role: "system", content: "You're Deevo, an unfiltered Gen Z AI buddy who's fun, honest, and vibey." }
+    ];
+
+    async function sendMessage() {
+      const input = document.getElementById("userInput");
+      const chat = document.getElementById("chat");
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+
+      // Show user's message
+      const userBubble = document.createElement("div");
+      userBubble.className = "message user";
+      userBubble.textContent = userMessage;
+      chat.appendChild(userBubble);
+
+      // Add to messages array
+      messages.push({ role: "user", content: userMessage });
+
+      input.value = "";
+
+      // Call local proxy server
+      try {
+        const res = await fetch("http://localhost:3000/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model: MODEL, messages, apiKey: API_KEY })
+        });
+
+        const data = await res.json();
+
+        const reply = data.choices?.[0]?.message?.content || "Oops, no response 💀";
+
+        // Show AI reply
+        const aiBubble = document.createElement("div");
+        aiBubble.className = "message";
+        aiBubble.textContent = reply;
+        chat.appendChild(aiBubble);
+
+        messages.push({ role: "assistant", content: reply });
+
+      } catch (err) {
+        console.error(err);
+        const errBubble = document.createElement("div");
+        errBubble.className = "message";
+        errBubble.textContent = "💥 Uh-oh, I tripped. Try again later!";
+        chat.appendChild(errBubble);
+      }
+    }
+  </script>
+</body>
+</html>
